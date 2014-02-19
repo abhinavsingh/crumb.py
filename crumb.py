@@ -4,7 +4,7 @@ import hmac
 import random
 import hashlib
 
-VERSION = (0, 1)
+VERSION = (0, 2)
 __version__ = '.'.join(map(str, VERSION[0:2]))
 __description__ = 'Generate TTL based self expiring crumbs (token).'
 __author__ = 'Abhinav Singh'
@@ -17,11 +17,11 @@ class Crumb(object):
     choices = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)'
     
     def __init__(self, uid, ttl, key=None, action=None, secret=None):
-        self.uid = uid
-        self.ttl = ttl
-        self.key = key
-        self.action = action if action else 'crumb'
-        self.secret = secret if secret else self.gen_secret()
+        self.uid = str(uid)
+        self.ttl = int(ttl)
+        self.key = str(key) if key else key
+        self.action = str(action) if action else 'crumb'
+        self.secret = str(secret) if secret else self.gen_secret()
     
     def gen_secret(self):
         return ''.join([random.SystemRandom().choice(self.choices) for _ in range(50)])
