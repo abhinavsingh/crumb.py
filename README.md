@@ -7,6 +7,10 @@ Usage
 -----
 
 ```
+pip install --upgrade crumb.py
+```
+
+```
 >>> from crumb import Crumb
 >>>
 >>> # generate crumb for user that expires in 30 seconds
