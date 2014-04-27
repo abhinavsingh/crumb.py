@@ -4,7 +4,7 @@ import hmac
 import random
 import hashlib
 
-VERSION = (0, 3)
+VERSION = (0, 4)
 __version__ = '.'.join(map(str, VERSION[0:2]))
 __description__ = 'Generate TTL based self expiring crumbs (token).'
 __author__ = 'Abhinav Singh'
@@ -37,33 +37,27 @@ class Crumb(object):
         return ''.join([random.SystemRandom().choice(self.choices) for _ in range(50)])
     
     def challenge(self, i):
-        '''Calculate challenge for passed interval id `i`.'''
+        '''Calculate challenge for passed bucket id `i`.'''
         return hmac.new(self.secret, '%s%s%s' % (i, self.action, self.uid), hashlib.sha256).hexdigest()[-12:]
     
-    def get_current_interval_challenge(self):
-        '''Get ongoing interval challenge.'''
-        i = self.get_current_interval_id()
-        return self.challenge(i)
+    def get_nth_bucket_challenge(self, n):
+        '''n=1 for upcoming bucket (in future), n=-1 for bucket in future, n=0 for current bucket.'''
+        i = self.get_current_bucket_id()
+        return self.challenge(i+n)
     
-    def get_previous_interval_challenge(self):
-        '''Get previous / passed interval challenge.'''
-        i = self.get_current_interval_id()
-        return self.challenge(i-1)
-    
-    def get_current_interval_id(self):
-        '''Get current time interval id.'''
+    def get_current_bucket_id(self):
+        '''Get current time bucket id.'''
         return math.ceil(time.time() / int(self.ttl))
     
     def validate(self):
         '''Validate passed crumb key.'''
         assert self.key is not None
-        if self.get_current_interval_challenge() == self.key \
-        or self.get_previous_interval_challenge() == self.key:
+        if self.get_nth_bucket_challenge(0) == self.key \
+        or self.get_nth_bucket_challenge(-1) == self.key:
             return True
         return False
     
     def generate(self):
         '''Generate a new crumb key.'''
-        i = self.get_current_interval_id()
-        self.key = self.challenge(i)
+        self.key = self.get_nth_bucket_challenge(0)
         return self.key
