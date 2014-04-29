@@ -4,7 +4,7 @@ import hmac
 import random
 import hashlib
 
-VERSION = (0, 4)
+VERSION = (0, 5)
 __version__ = '.'.join(map(str, VERSION[0:2]))
 __description__ = 'Generate TTL based self expiring crumbs (token).'
 __author__ = 'Abhinav Singh'
@@ -49,12 +49,16 @@ class Crumb(object):
         '''Get current time bucket id.'''
         return math.ceil(time.time() / int(self.ttl))
     
-    def validate(self):
+    def validate(self, grace=0):
         '''Validate passed crumb key.'''
         assert self.key is not None
-        if self.get_nth_bucket_challenge(0) == self.key \
-        or self.get_nth_bucket_challenge(-1) == self.key:
+        if self.get_nth_bucket_challenge(0) == self.key:
             return True
+        
+        for i in range(0, grace):
+            if self.get_nth_bucket_challenge(-1*(i+1)) == self.key:
+                return True
+        
         return False
     
     def generate(self):
